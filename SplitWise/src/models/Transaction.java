@@ -6,7 +6,7 @@ public class Transaction extends BaseClass{
     private User fromUser;
     private User toUser;
     private double amount;
-    private Date transactionDate;
+
 
     public User getFromUser() {
         return fromUser;
@@ -32,11 +32,5 @@ public class Transaction extends BaseClass{
         this.amount = amount;
     }
 
-    public Date getTransactionDate() {
-        return transactionDate;
-    }
 
-    public void setTransactionDate(Date transactionDate) {
-        this.transactionDate = transactionDate;
-    }
 }

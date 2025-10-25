@@ -7,6 +7,7 @@ public class Group extends BaseClass {
     private String description;
     private List<User> users;
 
+
     public String getName() {
         return name;
     }

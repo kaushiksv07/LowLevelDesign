@@ -6,5 +6,5 @@ import models.ExpenseShare;
 import java.util.List;
 
 public interface ExpenseService {
-    List<ExpenseShare> addExpenseDetails(Expense  expense);
+    void addExpenseDetails(Expense  expense);
 }

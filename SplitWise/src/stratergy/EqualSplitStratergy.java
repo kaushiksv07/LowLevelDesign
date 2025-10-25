@@ -1,36 +1,77 @@
 package stratergy;
 
-import models.Expense;
-import models.ExpenseShare;
-import models.Group;
-import models.User;
+import models.*;
 import models.enums.ExpenseType;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class EqualSplitStratergy implements SplitStratergy{
     @Override
-    public List<ExpenseShare> split(List<Expense> expenses, Group group, List<User> users) {
-        for(Expense expense : expenses) {
+    public List<Transaction> split(List<Expense> expenses, Group group, List<User> users) {
+        Map<User, Double> usersDts = new HashMap<>();
 
-        }
-        double amount = expense.getAmount();
-        List<ExpenseShare> expenseShares = new ArrayList<>();
-        int userCount = users.size();
-        double splitAmount = amount/userCount;
-        User paidUser = expense.getPaidUser();
-        for(int i = 0; i < userCount; i++){
-            ExpenseShare  expenseShare = new ExpenseShare();
-            expenseShare.setUser(users.get(i));
-            expenseShare.setAmount(splitAmount);
-            if(paidUser.getId() == users.get(i).getId()){
-                expenseShare.setExpenseType(ExpenseType.PAID);
-            }else{
-                expenseShare.setExpenseType(ExpenseType.OWED);
+        for(Expense expense : expenses){
+            double amount = expense.getAmount();//9 => 9/3 => 3 => but paid user it will be +9 -3
+            double share = amount/users.size();
+            User paidUser = expense.getPaidUser();
+            for(User user : users){
+                double curr = usersDts.getOrDefault(user, 0.0);
+                if(user.getId() == paidUser.getId()){
+                    usersDts.put(user, curr + (amount - share));
+                }else{
+                    usersDts.put(user, curr - share);
+                }
             }
-            expenseShares.add(expenseShare);
         }
-        return expenseShares;
+
+
+        PriorityQueue<Balance> posiivePq = new PriorityQueue<>((a, b) -> Double.compare(b.getAmount(), a.getAmount()));
+        PriorityQueue<Balance> negativePq = new PriorityQueue<>((a, b) -> Double.compare(a.getAmount(), b.getAmount()));
+
+        for(Map.Entry<User, Double> entry : usersDts.entrySet()){
+            Balance balance = new Balance();
+            balance.setAmount(entry.getValue());
+            balance.setUser(entry.getKey());
+            if(entry.getValue() > 0){
+                posiivePq.add(balance);
+            }else{
+                balance.setAmount(-1 * entry.getValue());
+                negativePq.add(balance);
+            }
+        }
+
+
+        List<Transaction> transactions = new ArrayList<>();
+        while(posiivePq.size() > 0 && negativePq.size() > 0){
+
+            Balance positiveBal = posiivePq.poll();
+            Balance negativeBal = negativePq.poll();
+
+            Transaction transaction = new Transaction();
+            double settleAmt = Math.min(positiveBal.getAmount(), negativeBal.getAmount());
+            if(positiveBal.getAmount() < negativeBal.getAmount()){
+                transaction.setFromUser(negativeBal.getUser());
+                transaction.setToUser(positiveBal.getUser());
+//                transaction.setAmount(positiveBal.getAmount());
+
+            }else {
+                transaction.setFromUser(negativeBal.getUser());
+                transaction.setToUser(positiveBal.getUser());
+//                transaction.setAmount(negativeBal.getAmount());
+            }
+            transaction.setAmount(settleAmt);
+            negativeBal.setAmount(negativeBal.getAmount() - settleAmt);
+            positiveBal.setAmount(positiveBal.getAmount() - settleAmt);
+            transactions.add(transaction);
+
+            if(negativeBal.getAmount() > 0){
+                negativePq.add(negativeBal);
+            }
+            if(positiveBal.getAmount() > 0){
+                posiivePq.add(positiveBal);
+            }
+        }
+
+        return transactions;
     }
 }
