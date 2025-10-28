@@ -11,6 +11,15 @@ public class Elevator extends BaseClass{
     private int maxFloor;
     private int maxCapacity;
     private int currentFloor;
+    private Status  currentStatus;
+
+    public Status getCurrentStatus() {
+        return currentStatus;
+    }
+
+    public void setCurrentStatus(Status currentStatus) {
+        this.currentStatus = currentStatus;
+    }
 
     public int getMaxCapacity() {
         return maxCapacity;
